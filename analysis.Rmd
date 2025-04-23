@@ -1,0 +1,204 @@
+---
+title: "SENG_533_analysis"
+output: html_document
+date: "2025-04-23"
+---
+
+Lets start analyzing.
+
+```{r, echo=FALSE, message=FALSE}
+# Use Libraries
+library(ggplot2)
+
+library(GGally)
+library(tidyverse)
+
+# Some fancy plotting
+library(grDevices)
+library(maps)
+library(dplyr)
+```
+
+Load the data, This stuff is the measurement of each request so there's a lot
+
+```{r}
+micro_25.df = read.csv("25_users_micro.csv")
+micro_50.df = read.csv("50_users_micro.csv")
+micro_75.df = read.csv("75_users_micro.csv")
+micro_100.df = read.csv("100_users_micro.csv")
+
+micro_25.df$users <- "25"
+micro_50.df$users <- "50"
+micro_75.df$users <- "75"
+micro_100.df$users <- "100"
+```
+
+Here's the aggregate data from JMeter
+
+```{r}
+agg_25.df = read.csv("AGG_25_users_micro.csv")
+agg_50.df = read.csv("AGG_50_users_micro.csv")
+agg_75.df = read.csv("AGG_75_users_micro.csv")
+agg_100.df = read.csv("AGG_100_users_micro.csv")
+```
+
+Lets combine them into a single data frame to compare them easier
+
+```{r}
+users = c("25","25","50","50","75","75","100","100")
+dfs = list(agg_25.df, agg_50.df, agg_75.df, agg_100.df)
+agg.df = bind_rows(dfs)
+agg.df$users <- users
+agg.df$users <- factor(agg.df$users, levels = c("25", "50", "75", "100"))
+agg.df <- subset(agg.df, Label != "TOTAL")
+head(agg.df)
+str(agg.df)
+```
+
+
+All measured with a half second delay. in a t2.micro instance.
+
+```{r}
+str(micro_25.df)
+```
+
+```{r}
+#str(micro_50.df)
+```
+
+```{r}
+#str(micro_75.df)
+```
+
+```{r}
+#str(micro_100.df)
+```
+
+Ok now we can start analyzing. but I'll do that later cuz I'm lazy
+
+```{r}
+ggplot(all_micro.df, aes(x = users, y = elapsed, fill = users)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Response Times per User Load (t2.micro)",
+       x = "Number of Users",
+       y = "Elapsed Time (ms)") +
+  theme_minimal()
+```
+
+
+```{r}
+all_micro.df <- bind_rows(micro_25.df, micro_50.df, micro_75.df, micro_100.df)
+
+ggplot(all_micro.df, aes(x = elapsed, fill = users)) +
+  geom_density(alpha = 0.4) +
+  coord_cartesian(xlim = c(550, 600)) +
+  labs(title = "Response Time Distribution by User Load (t2.micro)",
+       x = "Elapsed Time (ms)",
+       y = "Density") +
+  theme_minimal()
+```
+
+
+Whatever lets do some aggregate stuff now
+
+```{r}
+ggplot(agg.df, aes(x = users, y = Throughput)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = round(Throughput, 1)), vjust = -0.5) +
+  labs(title = "Throughput by Number of Users on Micro instance",
+       x = "Number of Users",
+       y = "Throughput (requests/sec)") +
+  theme_minimal()
+```
+
+Now for medium instances
+
+```{r}
+medium_25.df = read.csv("25_users_medium.csv")
+medium_50.df = read.csv("50_users_medium.csv")
+medium_75.df = read.csv("75_users_medium.csv")
+medium_100.df = read.csv("100_users_medium.csv")
+
+medium_25.df$users <- "25"
+medium_50.df$users <- "50"
+medium_75.df$users <- "75"
+medium_100.df$users <- "100"
+```
+
+```{r}
+all_medium <- bind_rows(medium_25.df, medium_50.df, medium_75.df, medium_100.df)
+
+ggplot(all_medium, aes(x = elapsed, fill = users)) +
+  geom_density(alpha = 0.4) +
+  coord_cartesian(xlim = c(550, 600)) +
+  labs(title = "Response Time Distribution by User Load (t2.medium)",
+       x = "Elapsed Time (ms)",
+       y = "Density") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(all_medium, aes(x = users, y = elapsed, fill = users)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Response Times per User Load (t2.micro)",
+       x = "Number of Users",
+       y = "Elapsed Time (ms)") +
+  theme_minimal()
+```
+
+Its pretty localized to that one spot.
+
+Here's the aggregate data from JMeter
+
+```{r}
+agg_25medium.df = read.csv("AGG_25_users_medium.csv")
+agg_50medium.df = read.csv("AGG_50_users_medium.csv")
+agg_75medium.df = read.csv("AGG_75_users_medium.csv")
+agg_100medium.df = read.csv("AGG_100_users_medium.csv")
+```
+
+Lets combine them into a single data frame to compare them easier
+
+```{r}
+users = c("25","25","50","50","75","75","100","100")
+dfs = list(agg_25medium.df, agg_50medium.df, agg_75medium.df, agg_100medium.df)
+aggmedium.df = bind_rows(dfs)
+aggmedium.df$users <- users
+aggmedium.df$users <- factor(aggmedium.df$users, levels = c("25", "50", "75", "100"))
+aggmedium.df <- subset(aggmedium.df, Label != "TOTAL")
+head(aggmedium.df)
+str(aggmedium.df)
+```
+
+```{r}
+ggplot(aggmedium.df, aes(x = users, y = Throughput)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = round(Throughput, 1)), vjust = -0.5) +
+  labs(title = "Throughput by Number of Users on medium instance",
+       x = "Number of Users",
+       y = "Throughput (requests/sec)") +
+  theme_minimal()
+```
+
+combine them for more analysis
+
+```{r}
+agg.df$instance <- "micro"
+aggmedium.df$instance <- "medium"
+
+agg_all.df <- bind_rows(agg.df, aggmedium.df)
+```
+
+Another plot
+
+```{r}
+ggplot(agg_all.df, aes(x = users, y = Throughput, fill = instance)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = round(Throughput, 1)), 
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  labs(title = "Throughput Comparison: Micro vs Medium EC2 Instances",
+       x = "Number of Users",
+       y = "Throughput (requests/sec)") +
+  theme_minimal()
+```
+
